@@ -1,17 +1,19 @@
 package main;
+
+import java.io.Serializable;
 import java.util.*;
 
 import javafx.util.Pair;
 
-public class Process {
+public class Process implements Serializable {
     private static int nextId = 1;
 
     private int id;
     private String state;
     private int programCounter;
-    //private Memory memory;
+    // private Memory memory;
     private List<String> instructions;
-    
+
     private int startIndex;
     private int endIndex;
 
@@ -21,7 +23,7 @@ public class Process {
         this.id = nextId++;
         this.state = "New";
         this.programCounter = 0;
-        //this.memory = new Memory();
+        // this.memory = new Memory();
         this.instructions = new ArrayList<>();
         this.startIndex = 0;
         this.endIndex = 0;
@@ -49,7 +51,7 @@ public class Process {
     }
 
     // public Memory getMemory() {
-    //     return memory;
+    // return memory;
     // }
 
     public void setInstructions(List<String> instructions) {
@@ -61,25 +63,23 @@ public class Process {
     }
 
     // public void setMemoryBoundaries(Pair<Integer, Integer> memoryBoundaries) {
-    //     this.memoryBoundaries = memoryBoundaries;
+    // this.memoryBoundaries = memoryBoundaries;
     // }
 
     // public int getStartBoundary() {
-    //     return memoryBoundaries.getKey();
+    // return memoryBoundaries.getKey();
     // }
-
-     
 
     public boolean isFinished() {
         return programCounter >= instructions.size();
     }
 
     // public void setStartIndex(int startIndex) {
-    //     this.startIndex = startIndex;
+    // this.startIndex = startIndex;
     // }
 
     // public void setEndIndex(int endIndex) {
-    //     this.endIndex = endIndex;
+    // this.endIndex = endIndex;
     // }
 
     public int getRequiredMemory() {
@@ -103,56 +103,54 @@ public class Process {
         this.endIndex = endIndex2;
     }
 
-
-    
 }
 
 //
-//class Process {
-//    private int processId;
-//    private String processState;
-//    private int programCounter;
-//    private String[] memoryBoundaries;
+// class Process {
+// private int processId;
+// private String processState;
+// private int programCounter;
+// private String[] memoryBoundaries;
 //
-//    public Process(int id) {
-//        this.processId = id;
-//        this.processState = "READY";
-//        this.programCounter = 0;
-//        this.memoryBoundaries = new String[40]; // default memory size
-//    }
+// public Process(int id) {
+// this.processId = id;
+// this.processState = "READY";
+// this.programCounter = 0;
+// this.memoryBoundaries = new String[40]; // default memory size
+// }
 //
-//    // Getters
-//    public int getProcessId() {
-//        return this.processId;
-//    }
+// // Getters
+// public int getProcessId() {
+// return this.processId;
+// }
 //
-//    public String getProcessState() {
-//        return this.processState;
-//    }
+// public String getProcessState() {
+// return this.processState;
+// }
 //
-//    public int getProgramCounter() {
-//        return this.programCounter;
-//    }
+// public int getProgramCounter() {
+// return this.programCounter;
+// }
 //
-//    public String[] getMemoryBoundaries() {
-//        return this.memoryBoundaries;
-//    }
+// public String[] getMemoryBoundaries() {
+// return this.memoryBoundaries;
+// }
 //
-//    // Setters
-//    public void setProcessId(int processId) {
-//        this.processId = processId;
-//    }
+// // Setters
+// public void setProcessId(int processId) {
+// this.processId = processId;
+// }
 //
-//    public void setProcessState(String processState) {
-//        this.processState = processState;
-//    }
+// public void setProcessState(String processState) {
+// this.processState = processState;
+// }
 //
-//    public void setProgramCounter(int programCounter) {
-//        this.programCounter = programCounter;
-//    }
+// public void setProgramCounter(int programCounter) {
+// this.programCounter = programCounter;
+// }
 //
-//    public void setMemoryBoundaries(String[] memoryBoundaries) {
-//        this.memoryBoundaries = memoryBoundaries;
-//    }
-//}
+// public void setMemoryBoundaries(String[] memoryBoundaries) {
+// this.memoryBoundaries = memoryBoundaries;
+// }
+// }
 //
