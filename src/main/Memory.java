@@ -5,9 +5,11 @@ import java.util.*;
 public class Memory {
     private static final int MEMORY_SIZE = 40;
     private HashMap<String, Object> memory;
+    private int currentSize;
 
     public Memory() {
         this.memory = new HashMap<>();
+        this.currentSize = 0;
     }
 
     public boolean allocateMemory(Process process) {
@@ -33,10 +35,16 @@ public class Memory {
             process.setState("Ready");
             if(memory.get(startIndex + "") instanceof Process){
                 ((Process)(memory.get(startIndex + ""))).setState("Ready");
+
+            this.currentSize += process.getRequiredMemory();
             }
             
 
             return true;
+        }
+        else{
+            Process removedProcess;
+
         }
         return false;
     }
@@ -47,6 +55,21 @@ public class Memory {
         for (int i = startIndex; i <= endIndex; i++) {
             memory.remove(i);
         }
+        shiftHashMapKeys();
+    }
+
+    public void shiftHashMapKeys() {
+        HashMap<String, Object> shiftedMap = new HashMap<>();
+        int counter = 1;
+
+        for (Map.Entry<String, Object> entry : this.memory.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            shiftedMap.put(String.valueOf(counter), value);
+            counter++;
+        }
+        this.memory = shiftedMap;
+
     }
 
     public void displayMemoryState() {

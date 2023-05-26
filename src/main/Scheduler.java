@@ -71,6 +71,7 @@ public class Scheduler {
                 readyQueue.add(currentProcess);
             } else {
                 System.out.println("Finished process: " + currentProcess.getId());
+                mem.deallocateMemory(currentProcess);
             }
         }
     }
