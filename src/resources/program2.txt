@@ -1,3 +1,0 @@
-assign filename "output.txt"
-assign data "Hello, world!"
-writeFile filename data

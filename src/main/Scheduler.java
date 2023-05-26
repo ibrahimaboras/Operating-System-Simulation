@@ -1,5 +1,6 @@
 package main;
 
+import java.time.temporal.Temporal;
 import java.util.*;
 
 import javax.swing.text.html.HTMLDocument.BlockElement;
@@ -13,10 +14,16 @@ public class Scheduler {
     private int timeSlice;
     private Process currentProcess;
 
+    private int time;
+
     public Scheduler(int timeSlice) {
         this.readyQueue = new LinkedList<>();
         this.blockQueue = new LinkedList<>();
+        this.blockedOutput = new LinkedList<>();
+        this.blockedInput = new LinkedList<>();
+        this.blockedFile = new LinkedList<>();
         this.timeSlice = timeSlice;
+        this.time = 0;
     }
 
     public void addProcess(Process process) {
@@ -61,11 +68,47 @@ public class Scheduler {
         while (!readyQueue.isEmpty()) {
             currentProcess = readyQueue.poll();
             System.out.println("Executing process: " + currentProcess.getId());
-            if()
+
+            boolean flag = false;
+
+            // for (Object value : mem.getMemory().values()) {
+            //     System.out.println(value);
+            // }
+            
+            for(int i = 0; i < mem.getMemory().size(); i++){
+               // System.out.println(mem.getMemory().get(String.valueOf(i)));
+                if(mem.getMemory().get(String.valueOf(i)) instanceof Process){
+                    Process temp = (Process) (mem.getMemory().get(String.valueOf(i)));
+
+                    if(temp.getId() == currentProcess.getId()){
+                        flag = true;
+                        break;
+                    }
+                    i += temp.getRequiredMemory() - 1;
+                }
+            }
+
+            if(!flag){
+                mem.allocateMemory(currentProcess);
+                mem.clearDisk(currentProcess);
+            }
+
+
             for (int i = 0; i < timeSlice; i++) {
+                ArrayList<Process> processes = mem.loadData(i); 
+                
+                if(!processes.isEmpty()){
+                    for(Process pro : processes){
+                        readyQueue.add(pro);
+                    }
+                }
+
                 if (currentProcess.getProgramCounter() < currentProcess.getInstructions().size()) {
                     interpreter.interpret(this, mem, currentProcess);
+
+                    time++;
                 } else {
+                    time++;
                     break;
                 }
             }
@@ -86,6 +129,37 @@ public class Scheduler {
     public boolean hasProcessesToExecute() {
         return !this.readyQueue.isEmpty();
     }
+
+    public Queue<Process> getReadyQueue() {
+        return readyQueue;
+    }
+
+    public Queue<Process> getBlockQueue() {
+        return blockQueue;
+    }
+
+    public Queue<Process> getBlockedOutput() {
+        return blockedOutput;
+    }
+
+    public Queue<Process> getBlockedInput() {
+        return blockedInput;
+    }
+
+    public Queue<Process> getBlockedFile() {
+        return blockedFile;
+    }
+
+    public int getTimeSlice() {
+        return timeSlice;
+    }
+
+    public Process getCurrentProcess() {
+        return currentProcess;
+    }
+
+
+    
 }
 
 //

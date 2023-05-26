@@ -78,31 +78,58 @@ import java.io.*;
 
 public class Interpreter {
 
-    private Map<String, Object> mutexes;
+    private Map<String, Mutex> mutexes;
+    Mutex output;
+    Mutex input;
+    Mutex fileM;
+    int time = 0;
 
     public Interpreter() {
         this.mutexes = new HashMap<>();
-        mutexes.put("userInput", new Object());
-        mutexes.put("userOutput", new Object());
-        mutexes.put("file", new Object());
+        // mutexes.put("userInput", new Mutex());
+        // mutexes.put("userOutput", new Mutex());
+        // mutexes.put("file", new Mutex());
     }
 
-    public void createProcess(Memory mem) throws IOException {
+    public void createProcess(Memory mem, Scheduler scheduler) throws IOException {
+
+            // Process newProcess = new Process();
 
             // Specify the directory path
-            String directoryPath = "src/resources";
+            String directoryPath = "src/Programs";
     
             // Create a File object for the directory
             File directory = new File(directoryPath);
+            
+            //String filePath = "src/Programs/" + file + ".txt";
+
+            // FileReader fileReader = new FileReader(new File(filePath));
+
+            // BufferedReader br = new BufferedReader(fileReader);
+            // String line = "";
+            // List<String> instructions = new ArrayList<>();
+            // while((line = br.readLine()) != null){
+            //     instructions.add(line);
+            // }
+            // newProcess.setInstructions(instructions);
+            // mem.allocateMemory(newProcess);
+            // scheduler.addProcess(newProcess);
+
     
-            // Check if the directory exists
+            //Check if the directory exists
             if (directory.exists() && directory.isDirectory()) {
                 // Get an array of all files in the directory
                 File[] files = directory.listFiles();
     
                 // Loop through each file
-                for (File file : files) {
-                    Process newProcess = new Process();
+                for (int i = 0; i < files.length; i++) {
+                    File file = files[i];
+                    Process newProcess;
+
+                    if(i == 0) newProcess = new Process(0);
+                    else if(i == 1) newProcess = new Process(2);
+                    else newProcess = new Process(4);
+
 
                     if (file.isFile()) {
                         // Perform operations on the file
@@ -117,7 +144,7 @@ public class Interpreter {
                         }
                         newProcess.setInstructions(instructions);
                         mem.allocateMemory(newProcess);
-
+                        if(i == 0) scheduler.addProcess(newProcess);
                     }
                 }
             } else {
@@ -125,13 +152,13 @@ public class Interpreter {
             }
         
 
-//        FileReader file = new FileReader("program1.txt");
+    //    FileReader file = new FileReader("program1.txt");
 
-        // BufferedReader br = new BufferedReader(file);
-        // String line = "";
-        // while((line = br.readLine()) != null){
+    //     BufferedReader br = new BufferedReader(file);
+    //     String line = "";
+    //     while((line = br.readLine()) != null){
             
-        // }
+    //     }
     }
 
     // public static void main(String[] args) {
@@ -153,8 +180,19 @@ public class Interpreter {
 
         switch (command) {
             case "print":
+                String indexPrint = "";
+                switch(parts[1]){
+                    case "x":
+                        indexPrint = String.valueOf(process.getEndIndex() - 2);
+                        break;
+                    case "y":
+                        indexPrint = String.valueOf(process.getEndIndex() - 1);
+                        break;
+                    case "z":
+                        indexPrint = String.valueOf(process.getEndIndex());
+                }
                 synchronized (mutexes.get("userOutput")) {
-                    System.out.println(mem.read(parts[1]));
+                    System.out.println("Print Statement: " + mem.read(indexPrint));
                     flag = true;
                 }
                 if(flag){
@@ -163,7 +201,18 @@ public class Interpreter {
                 }
                 break;
             case "assign":
+                String index = "";
                 String value = parts[2];
+                switch(parts[1]){
+                    case "x":
+                        index = String.valueOf(process.getEndIndex() - 2);
+                        break;
+                    case "y":
+                        index = String.valueOf(process.getEndIndex() - 1);
+                        break;
+                    case "z":
+                        index = String.valueOf(process.getEndIndex());
+                }
                 if (value.equals("input")) {
                     // userInputMutex.acquire();
                     synchronized (mutexes.get("userInput")){
@@ -175,9 +224,11 @@ public class Interpreter {
                         //System.out.println("Value: " + inputValue);
                         try {
                             int intFromUser = Integer.parseInt(inputValue);
-                            mem.write(parts[1], mem.write(parts[1], inputValue));
+                            mem.write(index, inputValue);
+                            // System.out.println("Index: " + index);
+                            // System.out.println(((Variable)(mem.getMemory().get(index))).getValue());
                         } catch (NumberFormatException e) {
-                            mem.write(parts[1], inputValue);
+                            mem.write(index, inputValue);
                         }
                 
                         scanner.close();
@@ -185,12 +236,51 @@ public class Interpreter {
                     }
                 }
                 else 
-                    mem.write(parts[1], parts[2]);
+                    mem.write(index, parts[2]);
+                    // System.out.println("Index: " + index);
+                    // System.out.println(((Variable)(mem.getMemory().get(index))).getValue());
                 break;
             case "writeFile":
+                String indexWrite1 = "";
+                String indexWrite2 = "";
+
+                Variable part1;
+                Variable part2;
+
                 synchronized (mutexes.get("file")) {
-                    try (Writer writer = new BufferedWriter(new FileWriter(parts[1]))) {
-                        writer.write(mem.read(parts[2]).toString());
+                    switch(parts[1]){
+                        case "x":
+                            indexWrite1 = String.valueOf(process.getEndIndex() - 2);
+                            break;
+                        case "y":
+                            indexWrite1 = String.valueOf(process.getEndIndex() - 1);
+                            break;
+                        case "z":
+                            indexWrite1 = String.valueOf(process.getEndIndex());
+                    }
+
+                    part1 = (Variable)(mem.getMemory().get(indexWrite1));
+
+                    System.out.println(part1.getName() + "Value: " + part1.getValue());
+
+                    switch(parts[2]){
+                        case "x":
+                            indexWrite2 = String.valueOf(process.getEndIndex() - 2);
+                            break;
+                        case "y":
+                            indexWrite2 = String.valueOf(process.getEndIndex() - 1);
+                            break;
+                        case "z":
+                            indexWrite2 = String.valueOf(process.getEndIndex());
+                    }
+
+                    part2 = (Variable)(mem.getMemory().get(indexWrite2));
+
+                    String fileName = part1.getValue() + ".txt";
+                    // System.out.println(fileName);
+                    // File file = new File(fileName);
+                    try (Writer writer = new BufferedWriter(new FileWriter( "src/resources/" + fileName))) {
+                        writer.write(mem.read(indexWrite2).toString());
                         flag = true;
                     }
                     if(flag){
@@ -200,10 +290,30 @@ public class Interpreter {
                 }
                 break;
             case "readFile":
+                String indexReader = "";
+                String file = "";
+                Variable reader;
+
                 synchronized (mutexes.get("file")) {
-                    try (Scanner scanner = new Scanner(new File(parts[1]))) {
-                        if (scanner.hasNextLine()) {
-                            mem.write(parts[1], scanner.nextLine());
+
+                    switch(parts[1]){
+                        case "x":
+                            indexReader = String.valueOf(process.getEndIndex() - 2);
+                            break;
+                        case "y":
+                            indexReader = String.valueOf(process.getEndIndex() - 1);
+                            break;
+                        case "z":
+                            indexReader = String.valueOf(process.getEndIndex());
+                    }
+
+                    reader = (Variable)(mem.getMemory().get(indexReader));
+
+                    file = (String)reader.getValue() + ".txt";
+
+                    try (Scanner scanner = new Scanner(new File( "src/resources/" + file))) {
+                        while (scanner.hasNextLine()) {
+                            System.out.println(scanner.nextLine());
                         }
                         flag = true;
                     }
@@ -215,51 +325,81 @@ public class Interpreter {
                 }
                 break;
             case "printFromTo":
-                int start = Integer.parseInt(parts[1]);
-                int end = Integer.parseInt(parts[2]);
-                synchronized (mutexes.get("userOutput")) {
+
+                int start = 0;
+                int end = 0;
+
+                switch(parts[1]){
+                    case "x":
+                        start = Integer.parseInt((String)((Variable)(mem.getMemory().get(String.valueOf(process.getEndIndex() - 2)))).getValue());
+                        break;
+                    case "y":
+                        start = Integer.parseInt((String)((Variable)(mem.getMemory().get(String.valueOf(process.getEndIndex() - 1)))).getValue());
+                        break;
+                    case "z":
+                        start = Integer.parseInt((String)((Variable)(mem.getMemory().get(String.valueOf(process.getEndIndex())))).getValue());
+                }
+
+                switch(parts[2]){
+                    case "x":
+                        end = Integer.parseInt((String)((Variable)(mem.getMemory().get(String.valueOf(process.getEndIndex() - 2)))).getValue());
+                        break;
+                    case "y":
+                        end = Integer.parseInt((String)((Variable)(mem.getMemory().get(String.valueOf(process.getEndIndex() - 1)))).getValue());
+                        break;
+                    case "z":
+                        end = Integer.parseInt((String)((Variable)(mem.getMemory().get(String.valueOf(process.getEndIndex())))).getValue());
+                }
+
+
+                if(output.getPro().getId() == process.getId()){
                     for (int i = start; i <= end; i++) {
                         System.out.println(i);
                     }
-                    flag = true;
                 }
-                if(flag){
+                
+                else{
                     schedular.addToBlockedQueue(process);
                     schedular.addToOutput(process);
-               }
+                }
                 break;
             case "semWait":
-                synchronized (mutexes.get(parts[1])) {
-                    try {
-                        mutexes.get(parts[1]).wait();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                switch(parts[1]){
+                    case "userOutput":
+                        output = new Mutex(process);
+                    case "userInput":
+                        input = new Mutex(process);
+                    case "file":
+                        fileM = new Mutex(process);
                 }
                 break;
             case "semSignal":
-                synchronized (mutexes.get(parts[1])) {
-                    mutexes.get(parts[1]).notify();
+                
+                    System.out.println(mutexes.get(parts[1]).isLocked());
 
                     switch (parts[1]){
                         case "userOutput":
-                            schedular.removeFromOutput();
-
+                            if(!(schedular.getBlockedOutput().isEmpty()))
+                                schedular.removeFromOutput();
+                            break;
                         case "userInput":
-                            schedular.removeFromInput();
+                            if(!(schedular.getBlockedInput().isEmpty()))
+                                schedular.removeFromInput();
+                            break;
 
                         case "file":
-                            schedular.removeFromFile();
-
+                            if(!(schedular.getBlockedFile().isEmpty()))
+                                schedular.removeFromFile();
+                            break;
                     }
-                }
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid command: " + command);
-        }
-
+                    mutexes.get(parts[1]).unlock();
+                
+            
+            
+        time++;
         process.incrementProgramCounter();
     }
+}
 }
 
 //

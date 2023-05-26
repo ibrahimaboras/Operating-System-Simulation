@@ -11,9 +11,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.util.*;
 
-public class Memory {
+public class Memory implements Serializable{
     private static final int MEMORY_SIZE = 40;
     private HashMap<String, Object> memory;
     private int currentSize;
@@ -24,25 +25,25 @@ public class Memory {
     }
 
     public boolean allocateMemory(Process process) {
-        process.setRequiredMemory(1 + 4 + process.getInstructions().size());
+        process.setRequiredMemory(4 + process.getInstructions().size());
         int startIndex = findAvailableMemory(process.getRequiredMemory());
         if (startIndex != -1) {
-            int endIndex = startIndex + 4 + process.getInstructions().size();
+            int endIndex = startIndex + 4 + process.getInstructions().size() - 1;
             process.setMemoryBoundaries(startIndex, endIndex);
 
             memory.put(startIndex + "", process);
             // System.out.println(memory.get(startIndex + ""));
 
             int track = startIndex + 1;
-            for (int i = startIndex + 1, j = 0; i <= process.getInstructions().size(); i++, j++) {
+            for (int i = startIndex + 1, j = 0; j < process.getInstructions().size(); i++, j++) {
                 memory.put(i + "", process.getInstructions().get(j));
                 track++;
             }
-            memory.put(track + "", new Variable("x", null));
-            track++;
-            memory.put(track + "", new Variable("y", null));
-            track++;
-            memory.put(track + "", new Variable("z", null));
+            // memory.put(track + "", new Variable("x", null));
+            // track++;
+            // memory.put(track + "", new Variable("y", null));
+            // track++;
+            // memory.put(track + "", new Variable("z", null));
 
             process.setState("Ready");
             if (memory.get(startIndex + "") instanceof Process) {
@@ -70,29 +71,46 @@ public class Memory {
         return false;
     }
 
-    public static void main(String[] args) {
-        Memory mem = new Memory();
-        Process pro = new Process();
-        List<String> instructions = new ArrayList<>();
-        instructions.add("assign x y");
-        instructions.add("betengan");
-        instructions.add("woah");
-        pro.setInstructions(instructions);
-        mem.allocateMemory(pro);
-        mem.saveToDisk(pro);
-        ArrayList<Process> processes = mem.loadFromDisk();
-
-        for (int i = 0; i < pro.getInstructions().size(); i++) {
-            System.out.println(pro.getInstructions().get(i));
-            System.out.println(processes.get(0).getInstructions().get(i));
-
+    
+    public ArrayList<Process> loadData(int time) {
+        ArrayList<Process> processList = new ArrayList<>();
+        for (Map.Entry<String, Object> entry : memory.entrySet()) {
+            Object value = entry.getValue();
+            if (value instanceof Process) {
+                Process process = (Process) value;
+                if (process.getTime() >= time) {
+                    processList.add(process);
+                }
+            }
         }
-        System.out.println(processes.size());
-        mem.clearDisk(pro);
-        processes = mem.loadFromDisk();
-        System.out.println(processes.size());
-
+        return processList;
     }
+
+    // public static void main(String[] args) {
+    //     Memory mem = new Memory();
+    //     Process pro = new Process();
+    //     List<String> instructions = new ArrayList<>();
+    //     instructions.add("assign x y");
+    //     instructions.add("betengan");
+    //     instructions.add("woah");
+    //     pro.setInstructions(instructions);
+    //     mem.allocateMemory(pro);
+    //     //mem.saveToDisk(pro);
+    //     System.out.println(pro.getStartIndex() + " woah" + pro.getEndIndex());
+
+    //     // ArrayList<Process> processes = mem.loadFromDisk();
+
+    //     // for (int i = 0; i < pro.getInstructions().size(); i++) {
+    //     //     System.out.println(pro.getInstructions().get(i));
+    //     //     System.out.println(processes.get(0).getInstructions().get(i));
+
+    //     // }
+    //     // System.out.println(processes.size());
+    //     // mem.clearDisk(pro);
+    //     // processes = mem.loadFromDisk();
+    //     // System.out.println(processes.size());
+
+    // }
 
     private void saveToDisk(Process process) {
         try (ObjectOutputStream outputStream = new ObjectOutputStream(
@@ -119,7 +137,7 @@ public class Memory {
         return processes;
     }
 
-    private void clearDisk(Process processToRemove) {
+    public void clearDisk(Process processToRemove) {
         ArrayList<Process> processes = loadFromDisk();
         // processes.remove(processToRemove);
 
@@ -159,21 +177,27 @@ public class Memory {
     }
 
     public void shiftHashMapKeys() {
+        HashMap<String, Object> temp = new HashMap<>();
         HashMap<String, Object> shiftedMap = new HashMap<>();
-        int counter = 1;
+        int counter = 0;
 
         for (Map.Entry<String, Object> entry : this.memory.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
-            shiftedMap.put(String.valueOf(counter), value);
+            temp.put(String.valueOf(counter), value);
             counter++;
-
         }
-        for (int i = 1; i <= shiftedMap.size(); i++) {
-            if (shiftedMap.get(i) instanceof Process) {
 
+        counter = 0;
+        // process  10 mem    ->    10   ->    11
+        for (int i = 0; i < temp.size(); i++) {
+            if (temp.get(i) instanceof Process) {
+                Process pro = (Process)(temp.get(String.valueOf(i)));
+                pro.setMemoryBoundaries(i, i + pro.getRequiredMemory() - 1);
+                shiftedMap.put(String.valueOf(counter), pro);
+                i += pro.getRequiredMemory() - 1;
             }
-
+            counter++;
         }
 
         this.memory = shiftedMap;
@@ -195,7 +219,7 @@ public class Memory {
     private int findAvailableMemory(int requiredMemory) {
         int startIndex = -1;
         int count = 0;
-        for (int i = 0; i < MEMORY_SIZE; i++) {
+        for (int i = this.currentSize; i < MEMORY_SIZE; i++) {
             if (!memory.containsKey(i)) {
                 if (startIndex == -1) {
                     startIndex = i;

@@ -1,3 +1,0 @@
-assign x input
-assign y 15
-printFromTo x y

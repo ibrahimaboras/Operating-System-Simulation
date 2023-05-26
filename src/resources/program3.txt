@@ -1,2 +1,0 @@
-assign filename "output.txt"
-readFile filename

@@ -8,6 +8,8 @@ import javafx.util.Pair;
 public class Process implements Serializable {
     private static int nextId = 1;
 
+    int time;
+
     private int id;
     private String state;
     private int programCounter;
@@ -19,7 +21,7 @@ public class Process implements Serializable {
 
     private int requiredMemory;
 
-    public Process() {
+    public Process(int time) {
         this.id = nextId++;
         this.state = "New";
         this.programCounter = 0;
@@ -28,6 +30,8 @@ public class Process implements Serializable {
         this.startIndex = 0;
         this.endIndex = 0;
         this.requiredMemory = 0;
+
+        this.time = time;
     }
 
     public int getId() {
@@ -101,6 +105,10 @@ public class Process implements Serializable {
     public void setMemoryBoundaries(int startIndex2, int endIndex2) {
         this.startIndex = startIndex2;
         this.endIndex = endIndex2;
+    }
+
+    public int getTime() {
+        return time;
     }
 
 }

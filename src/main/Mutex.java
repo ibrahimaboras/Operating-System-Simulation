@@ -33,12 +33,17 @@ package main;
 
 public class Mutex {
     private boolean isLocked = false;
+    private Process pro;
 
-    public synchronized void lock() throws InterruptedException {
-        while (isLocked) {
-            wait();
-        }
-        isLocked = true;
+    public Mutex(Process process){
+        this.pro = process;
+    }
+
+    public synchronized void lock(Process woah) throws InterruptedException {
+        if(this.pro.getId() == woah.getId()) isLocked = false;
+        else isLocked = true;
+
+//        isLocked = true;
     }
 
     public synchronized void unlock() {
@@ -48,6 +53,10 @@ public class Mutex {
 
     public synchronized boolean isLocked() {
         return isLocked;
+    }
+
+    public Process getPro() {
+        return pro;
     }
 }
 
