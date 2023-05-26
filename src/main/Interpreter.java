@@ -191,11 +191,11 @@ public class Interpreter {
                     case "z":
                         indexPrint = String.valueOf(process.getEndIndex());
                 }
-                synchronized (mutexes.get("userOutput")) {
+                if(output.getPro().getId() == process.getId()){
                     System.out.println("Print Statement: " + mem.read(indexPrint));
                     flag = true;
                 }
-                if(flag){
+                else{
                     schedular.addToBlockedQueue(process);
                     schedular.addToOutput(process);
                 }
@@ -215,7 +215,7 @@ public class Interpreter {
                 }
                 if (value.equals("input")) {
                     // userInputMutex.acquire();
-                    synchronized (mutexes.get("userInput")){
+                    if(input.getPro().getId() == process.getId()){
                         Scanner scanner = new Scanner(System.in);
 
                         System.out.print("Please enter a value: ");
@@ -234,6 +234,10 @@ public class Interpreter {
                         scanner.close();
                     // userInputMutex.release();
                     }
+                    else{
+                        schedular.addToBlockedQueue(process);
+                        schedular.addToInput(process);
+                    }
                 }
                 else 
                     mem.write(index, parts[2]);
@@ -247,7 +251,7 @@ public class Interpreter {
                 Variable part1;
                 Variable part2;
 
-                synchronized (mutexes.get("file")) {
+                if(fileM.getPro().getId() == process.getId()) {
                     switch(parts[1]){
                         case "x":
                             indexWrite1 = String.valueOf(process.getEndIndex() - 2);
@@ -281,12 +285,13 @@ public class Interpreter {
                     // File file = new File(fileName);
                     try (Writer writer = new BufferedWriter(new FileWriter( "src/resources/" + fileName))) {
                         writer.write(mem.read(indexWrite2).toString());
-                        flag = true;
                     }
-                    if(flag){
+                }
+                else{
+                    
                         schedular.addToBlockedQueue(process);
                         schedular.addToFile(process);
-                    }
+                    
                 }
                 break;
             case "readFile":
@@ -294,7 +299,7 @@ public class Interpreter {
                 String file = "";
                 Variable reader;
 
-                synchronized (mutexes.get("file")) {
+                if(fileM.getPro().getId() == process.getId()){
 
                     switch(parts[1]){
                         case "x":
@@ -315,14 +320,14 @@ public class Interpreter {
                         while (scanner.hasNextLine()) {
                             System.out.println(scanner.nextLine());
                         }
-                        flag = true;
                     }
+                }
 
-                    if(flag){
+                    else{
                          schedular.addToBlockedQueue(process);
                          schedular.addToFile(process);
                     }
-                }
+                
                 break;
             case "printFromTo":
 
@@ -374,6 +379,15 @@ public class Interpreter {
                 }
                 break;
             case "semSignal":
+
+                switch(parts[1]){
+                    case "userOutput":
+                        output = null;
+                    case "userInput":
+                        input = null;
+                    case "file":
+                        fileM = null;
+            }
                 
                     System.out.println(mutexes.get(parts[1]).isLocked());
 
@@ -394,12 +408,13 @@ public class Interpreter {
                     }
                     mutexes.get(parts[1]).unlock();
                 
-            
-            
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid command: " + command);
+        }
         time++;
         process.incrementProgramCounter();
     }
-}
 }
 
 //
