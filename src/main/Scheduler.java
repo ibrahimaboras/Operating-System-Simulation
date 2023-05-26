@@ -28,45 +28,85 @@ public class Scheduler {
 
     public void addProcess(Process process) {
         this.readyQueue.add(process);
+        printQueue(blockQueue);
+
     }
 
     public void addToBlockedQueue(Process process) {
         this.blockQueue.add(process);
+        printQueue(blockQueue);
+
     }
 
     public void addToOutput(Process process) {
         this.blockedOutput.add(process);
+        printQueue(blockQueue);
+
     }
 
     public void addToInput(Process process) {
         this.blockedInput.add(process);
+        printQueue(blockQueue);
+
     }
 
     public void addToFile(Process process) {
         this.blockedFile.add(process);
+        printQueue(blockQueue);
+
     }
 
     public void removeFromOutput() {
         Process polled = this.blockedOutput.poll();
         this.blockQueue.remove(polled);
         this.readyQueue.add(polled);
+        printQueue(blockQueue);
     }
 
     public void removeFromInput() {
         Process polled = this.blockedInput.poll();
         this.blockQueue.remove(polled);
         this.readyQueue.add(polled);
+        printQueue(blockQueue);
+
     }
 
     public void removeFromFile() {
         Process polled = this.blockedFile.poll();
         this.blockQueue.remove(polled);
         this.readyQueue.add(polled);
+        printQueue(blockQueue);
+
+    }
+
+    public void printQueues() {
+        System.out.println("Ready Queue:");
+        printQueue(readyQueue);
+
+        System.out.println("Blocked Queue:");
+        printQueue(blockQueue);
+
+        System.out.println("Blocked Output:");
+        printQueue(blockedOutput);
+
+        System.out.println("Blocked Input:");
+        printQueue(blockedInput);
+
+        System.out.println("Blocked File:");
+        printQueue(blockedFile);
+    }
+
+    private void printQueue(Queue<Process> queue) {
+        for (Process process : queue) {
+            System.out.println(process);
+        }
+        System.out.println();
     }
 
     public void executeProcesses(Memory mem, Interpreter interpreter) throws Exception {
         while (!readyQueue.isEmpty()) {
             currentProcess = readyQueue.poll();
+            printQueue(blockQueue);
             System.out.println("Executing process: " + currentProcess.getId());
 
             boolean flag = false;
@@ -95,11 +135,15 @@ public class Scheduler {
 
 
             for (int i = 0; i < timeSlice; i++) {
+                mem.printMemory();
                 ArrayList<Process> processes = mem.loadData(i); 
                 
                 if(!processes.isEmpty()){
                     for(Process pro : processes){
+                        if(pro.getTime() == this.time)
                         readyQueue.add(pro);
+                        printQueue(blockQueue);
+
                     }
                 }
 
@@ -114,6 +158,8 @@ public class Scheduler {
             }
             if (currentProcess.getProgramCounter() < currentProcess.getInstructions().size()) {
                 readyQueue.add(currentProcess);
+                printQueue(blockQueue);
+
             } else {
                 System.out.println("Finished process: " + currentProcess.getId());
                 mem.deallocateMemory(currentProcess);

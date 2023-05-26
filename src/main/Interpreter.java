@@ -178,6 +178,59 @@ public class Interpreter {
 
         boolean flag = false;
 
+        if(parts.length == 4){
+            String index = "";
+            String value = parts[2];
+            switch(parts[1]){
+                case "x":
+                    index = String.valueOf(process.getEndIndex() - 2);
+                    break;
+                case "y":
+                    index = String.valueOf(process.getEndIndex() - 1);
+                    break;
+                case "z":
+                    index = String.valueOf(process.getEndIndex());
+            }
+
+            String inst = parts[2] + " " + parts[3];
+
+            String indexReader = "";
+                String file = "";
+                Variable reader;
+
+                if(fileM.getPro().getId() == process.getId()){
+
+                    switch(parts[1]){
+                        case "x":
+                            indexReader = String.valueOf(process.getEndIndex() - 2);
+                            break;
+                        case "y":
+                            indexReader = String.valueOf(process.getEndIndex() - 1);
+                            break;
+                        case "z":
+                            indexReader = String.valueOf(process.getEndIndex());
+                    }
+
+                    reader = (Variable)(mem.getMemory().get(indexReader));
+
+                    file = (String)reader.getValue() + ".txt";
+
+                    try (Scanner scanner = new Scanner(new File( "src/resources/" + file))) {
+                        while (scanner.hasNextLine()) {
+                            System.out.println(scanner.nextLine());
+                        }
+                    }
+                }
+
+                    else{
+                         schedular.addToBlockedQueue(process);
+                         schedular.addToFile(process);
+                    }
+                
+            
+            
+        }
+
         switch (command) {
             case "print":
                 String indexPrint = "";
@@ -231,7 +284,7 @@ public class Interpreter {
                             mem.write(index, inputValue);
                         }
                 
-                        scanner.close();
+                        //scanner.close();
                     // userInputMutex.release();
                     }
                     else{
@@ -265,7 +318,7 @@ public class Interpreter {
 
                     part1 = (Variable)(mem.getMemory().get(indexWrite1));
 
-                    System.out.println(part1.getName() + "Value: " + part1.getValue());
+                    //System.out.println(part1.getName() + "Value: " + part1.getValue());
 
                     switch(parts[2]){
                         case "x":
@@ -372,10 +425,13 @@ public class Interpreter {
                 switch(parts[1]){
                     case "userOutput":
                         output = new Mutex(process);
+                        break;
                     case "userInput":
                         input = new Mutex(process);
+                        break;
                     case "file":
                         fileM = new Mutex(process);
+                        break;
                 }
                 break;
             case "semSignal":
@@ -383,13 +439,16 @@ public class Interpreter {
                 switch(parts[1]){
                     case "userOutput":
                         output = null;
+                        break;
                     case "userInput":
                         input = null;
+                        break;
                     case "file":
                         fileM = null;
+                        break;
             }
                 
-                    System.out.println(mutexes.get(parts[1]).isLocked());
+                    //System.out.println(mutexes.get(parts[1]).isLocked());
 
                     switch (parts[1]){
                         case "userOutput":
@@ -406,7 +465,7 @@ public class Interpreter {
                                 schedular.removeFromFile();
                             break;
                     }
-                    mutexes.get(parts[1]).unlock();
+                   // mutexes.get(parts[1]).unlock();
                 
                 break;
             default:

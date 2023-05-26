@@ -171,7 +171,7 @@ public class Memory implements Serializable{
         int startIndex = process.getStartIndex();
         int endIndex = process.getEndIndex();
         for (int i = startIndex; i <= endIndex; i++) {
-            memory.remove(i);
+            memory.remove(String.valueOf(i));
         }
         shiftHashMapKeys();
     }
@@ -190,18 +190,40 @@ public class Memory implements Serializable{
 
         counter = 0;
         // process  10 mem    ->    10   ->    11
+        // Process end;
         for (int i = 0; i < temp.size(); i++) {
-            if (temp.get(i) instanceof Process) {
+            if (temp.get(String.valueOf(i)) instanceof Process) {
                 Process pro = (Process)(temp.get(String.valueOf(i)));
                 pro.setMemoryBoundaries(i, i + pro.getRequiredMemory() - 1);
                 shiftedMap.put(String.valueOf(counter), pro);
-                i += pro.getRequiredMemory() - 1;
+                // end = pro;
+                // i += pro.getRequiredMemory() - 1;
+            }
+            else{
+                shiftedMap.put(String.valueOf(i), temp.get(String.valueOf(i)));
             }
             counter++;
         }
 
         this.memory = shiftedMap;
 
+    }
+
+    public void printMemory() {
+        System.out.println("Memory State:");
+        for (Map.Entry<String, Object> entry : memory.entrySet()) {
+            if(entry.getValue() instanceof Variable){
+                String key = entry.getKey();
+                Object value = ((Variable)(entry.getValue())).getValue();
+                System.out.println(key + ": " + value);
+
+            }
+            else{
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                System.out.println(key + ": " + value);
+            }
+        }
     }
 
     public void displayMemoryState() {
