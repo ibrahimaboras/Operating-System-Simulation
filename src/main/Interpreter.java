@@ -2,8 +2,6 @@ package main;
 import java.util.*;
 import java.io.*;
 
-import java.util.HashMap;
-
 // public class Interpreter {
 //     //private HashMap<String, Integer> memory;
 //     private Mutex fileMutex;
@@ -89,17 +87,62 @@ public class Interpreter {
         mutexes.put("file", new Object());
     }
 
-    public void createProcess() throws IOException {
-        Process newProcess = new Process();
+    public void createProcess(Memory mem) throws IOException {
 
-        FileReader file = new FileReader("program1.txt");
+            // Specify the directory path
+            String directoryPath = "src/resources";
+    
+            // Create a File object for the directory
+            File directory = new File(directoryPath);
+    
+            // Check if the directory exists
+            if (directory.exists() && directory.isDirectory()) {
+                // Get an array of all files in the directory
+                File[] files = directory.listFiles();
+    
+                // Loop through each file
+                for (File file : files) {
+                    Process newProcess = new Process();
 
-        BufferedReader br = new BufferedReader(file);
-        String line = "";
-        while((line = br.readLine()) != null){
+                    if (file.isFile()) {
+                        // Perform operations on the file
+                        System.out.println(file.getName());
+                        FileReader fileReader = new FileReader(file);
+
+                        BufferedReader br = new BufferedReader(fileReader);
+                        String line = "";
+                        List<String> instructions = new ArrayList<>();
+                        while((line = br.readLine()) != null){
+                            instructions.add(line);
+                        }
+                        newProcess.setInstructions(instructions);
+                        mem.allocateMemory(newProcess);
+
+                    }
+                }
+            } else {
+                System.out.println("Invalid directory path");
+            }
+        
+
+//        FileReader file = new FileReader("program1.txt");
+
+        // BufferedReader br = new BufferedReader(file);
+        // String line = "";
+        // while((line = br.readLine()) != null){
             
-        }
+        // }
     }
+
+    // public static void main(String[] args) {
+    //     //FileReader woah = new FileReader("program1.txt");
+
+    //     File file = new File("src/resources/program1.txt");
+    //     if (file.isFile()) {
+    //         // Perform operations on the file
+    //         System.out.println(file.getName());
+    //     }
+    // }
 
     public void interpret(Scheduler schedular, Memory mem, Process process) throws IOException {
         String instruction = process.getInstructions().get(process.getProgramCounter());
@@ -120,7 +163,29 @@ public class Interpreter {
                 }
                 break;
             case "assign":
-                mem.write(parts[1], parts[2]);
+                String value = parts[2];
+                if (value.equals("input")) {
+                    // userInputMutex.acquire();
+                    synchronized (mutexes.get("userInput")){
+                        Scanner scanner = new Scanner(System.in);
+
+                        System.out.print("Please enter a value: ");
+                        String inputValue = scanner.nextLine();
+                
+                        //System.out.println("Value: " + inputValue);
+                        try {
+                            int intFromUser = Integer.parseInt(inputValue);
+                            mem.write(parts[1], mem.write(parts[1], inputValue));
+                        } catch (NumberFormatException e) {
+                            mem.write(parts[1], inputValue);
+                        }
+                
+                        scanner.close();
+                    // userInputMutex.release();
+                    }
+                }
+                else 
+                    mem.write(parts[1], parts[2]);
                 break;
             case "writeFile":
                 synchronized (mutexes.get("file")) {
@@ -175,6 +240,18 @@ public class Interpreter {
             case "semSignal":
                 synchronized (mutexes.get(parts[1])) {
                     mutexes.get(parts[1]).notify();
+
+                    switch (parts[1]){
+                        case "userOutput":
+                            schedular.removeFromOutput();
+
+                        case "userInput":
+                            schedular.removeFromInput();
+
+                        case "file":
+                            schedular.removeFromFile();
+
+                    }
                 }
                 break;
             default:

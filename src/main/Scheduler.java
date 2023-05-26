@@ -1,6 +1,8 @@
 package main;
 import java.util.*;
 
+import javax.swing.text.html.HTMLDocument.BlockElement;
+
 public class Scheduler {
     private Queue<Process> readyQueue;
     private Queue<Process> blockQueue;
@@ -34,6 +36,24 @@ public class Scheduler {
 
     public void addToFile(Process process){
         this.blockedFile.add(process);
+    }
+
+    public void removeFromOutput(){
+        Process polled = this.blockedOutput.poll();
+        this.blockQueue.remove(polled);
+        this.readyQueue.add(polled);
+    }
+
+    public void removeFromInput(){
+        Process polled = this.blockedInput.poll();
+        this.blockQueue.remove(polled);
+        this.readyQueue.add(polled);
+    }
+
+    public void removeFromFile(){
+        Process polled = this.blockedFile.poll();
+        this.blockQueue.remove(polled);
+        this.readyQueue.add(polled);
     }
 
     public void executeProcesses(Memory mem, Interpreter interpreter) throws Exception {
