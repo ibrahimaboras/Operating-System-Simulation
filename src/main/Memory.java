@@ -86,32 +86,6 @@ public class Memory implements Serializable{
         return processList;
     }
 
-    // public static void main(String[] args) {
-    //     Memory mem = new Memory();
-    //     Process pro = new Process();
-    //     List<String> instructions = new ArrayList<>();
-    //     instructions.add("assign x y");
-    //     instructions.add("betengan");
-    //     instructions.add("woah");
-    //     pro.setInstructions(instructions);
-    //     mem.allocateMemory(pro);
-    //     //mem.saveToDisk(pro);
-    //     System.out.println(pro.getStartIndex() + " woah" + pro.getEndIndex());
-
-    //     // ArrayList<Process> processes = mem.loadFromDisk();
-
-    //     // for (int i = 0; i < pro.getInstructions().size(); i++) {
-    //     //     System.out.println(pro.getInstructions().get(i));
-    //     //     System.out.println(processes.get(0).getInstructions().get(i));
-
-    //     // }
-    //     // System.out.println(processes.size());
-    //     // mem.clearDisk(pro);
-    //     // processes = mem.loadFromDisk();
-    //     // System.out.println(processes.size());
-
-    // }
-
     private void saveToDisk(Process process) {
         try (ObjectOutputStream outputStream = new ObjectOutputStream(
                 new FileOutputStream("src/resources/Disk.bin", true))) {
@@ -157,34 +131,28 @@ public class Memory implements Serializable{
             System.out.println("Error clearing disk: " + e.getMessage());
         }
     }
-    // private void clearDisk() {
-    // try (PrintWriter writer = new PrintWriter("src/resources/Disk.bin")) {
-    // // Clear the content of the file
-    // writer.print("");
-    // } catch (IOException e) {
-    // System.out.println("Error clearing disk: " + e.getMessage());
-    // }
-
-    // }
 
     public void deallocateMemory(Process process) {
         int startIndex = process.getStartIndex();
         int endIndex = process.getEndIndex();
+        int tempcurr = currentSize;
         for (int i = startIndex; i <= endIndex; i++) {
             memory.remove(String.valueOf(i));
+            tempcurr--;
         }
-        shiftHashMapKeys();
+        shiftHashMapKeys(startIndex, endIndex);
+        currentSize = tempcurr;
     }
 
-    public void shiftHashMapKeys() {
+    public void shiftHashMapKeys(int start, int end) {
         HashMap<String, Object> temp = new HashMap<>();
         HashMap<String, Object> shiftedMap = new HashMap<>();
         int counter = 0;
 
-        for (Map.Entry<String, Object> entry : this.memory.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            temp.put(String.valueOf(counter), value);
+
+
+        for (int i = end+1; i <= currentSize - 1; i++) {
+            temp.put(String.valueOf(counter), this.memory.get(String.valueOf(i)));
             counter++;
         }
 
@@ -292,77 +260,23 @@ public class Memory implements Serializable{
     }
 
     public void setVariable(String address, Object insert) {
-        ((Variable) (this.getMemoryWord(String.valueOf(address)))).setValue(insert);
+        ((Variable) (this.memory.get(String.valueOf(address)))).setValue(insert);
     }
 
-    // public static void main(String[] args) {
-    // Memory mem = new Memory();
-    // Process pro = new Process();
-    // List<String> instructions = new ArrayList<>();
-    // instructions.add("assign x y");
-    // instructions.add("betengan");
-    // instructions.add("woah");
-    // pro.setInstructions(instructions);
-
-    // mem.allocateMemory(pro);
-
-    // for (int i = 0; i < 8; i++) {
-    // if (mem.getMemoryWord(i + "") instanceof Process)
-    // System.out.println(((Process) (mem.getMemoryWord(i + ""))).getState());
-    // System.out.println(mem.getMemory().get(i + ""));
-    // }
-    // // System.out.println("qwrfsad");
-
-    // }
-
+    public void setProcessState(int processId, String state) {
+        for (Map.Entry<String, Object> entry : memory.entrySet()) {
+            Object value = entry.getValue();
+            if (value instanceof Process) {
+                Process process = (Process) value;
+                if (process.getId() == processId) {
+                    process.setState(state);
+                    break;
+                }
+            }
+        }
+    }
+    
 }
-
-// public class Memory {
-// public static final int MEMORY_SIZE = 40;
-// private Map<String, Variable> memoryMap;
-
-// public Memory() {
-// this.memoryMap = new HashMap<>();
-// }
-
-// public boolean write(String varName, Object value) {
-// if(this.memoryMap.size() < MEMORY_SIZE) {
-// this.memoryMap.put(varName, new Variable(varName, value));
-// return true;
-// } else {
-// return false;
-// }
-// }
-
-// public Variable getMemoryWord(String varName) {
-// Variable var = null;
-// if (this.memoryMap.containsKey(varName)) {
-// var = this.memoryMap.get(varName);
-// }
-// return var;
-// }
-
-// public Object read(String varName) {
-// if(this.memoryMap.containsKey(varName)) {
-// return this.memoryMap.get(varName).getValue();
-// } else {
-// return null;
-// }
-// }
-
-// public boolean isAvailable() {
-// return this.memoryMap.size() < MEMORY_SIZE;
-// }
-
-// public void remove(String varName) {
-// this.memoryMap.remove(varName);
-// }
-
-// public Map<String, Variable> getMemoryMap() {
-// return this.memoryMap;
-// }
-
-// }
 
 // Nested class to represent Variable with its name and value.
 class Variable {
@@ -386,53 +300,3 @@ class Variable {
         this.value = value;
     }
 }
-
-//
-// public class Memory {
-// private Integer[] memory;
-// private final int MEMORY_SIZE = 40;
-//
-// public Memory() {
-// memory = new Integer[MEMORY_SIZE];
-// }
-//
-// public synchronized boolean allocate(int processId, int processSize) {
-// // Search for a block of free memory
-// for (int i = 0; i < memory.length; i++) {
-// if (memory[i] == null) {
-// // Check if the block is big enough
-// int j = i;
-// while (j < memory.length && memory[j] == null && j - i < processSize) {
-// j++;
-// }
-// // If the block is big enough, allocate it
-// if (j - i == processSize) {
-// for (int k = i; k < j; k++) {
-// memory[k] = processId;
-// }
-// return true;
-// }
-// }
-// }
-// // No suitable block was found
-// return false;
-// }
-//
-// public synchronized void deallocate(int processId) {
-// // Free any blocks belonging to this process
-// for (int i = 0; i < memory.length; i++) {
-// if (memory[i] != null && memory[i] == processId) {
-// memory[i] = null;
-// }
-// }
-// }
-//
-// // Method for printing memory state
-// public void printMemoryState() {
-// for (int i = 0; i < memory.length; i++) {
-// System.out.print(memory[i] + " ");
-// }
-// System.out.println();
-// }
-// }
-//

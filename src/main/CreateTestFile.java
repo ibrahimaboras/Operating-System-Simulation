@@ -16,15 +16,10 @@ public class CreateTestFile {
 
         Memory memory = new Memory();
 
-        //SystemCall systemCall = new SystemCall(memory);
-
         Scheduler scheduler = new Scheduler(2);
         Interpreter interpreter = new Interpreter();
 
         interpreter.createProcess(memory, scheduler);
-       // interpreter.createProcess("program3", memory, scheduler);
-
-        //printHashMapValues(memory.getMemory());
 
         scheduler.executeProcesses(memory, interpreter);
     }

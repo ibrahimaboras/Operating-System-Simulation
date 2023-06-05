@@ -59,6 +59,7 @@ public class Scheduler {
     public void removeFromOutput() {
         Process polled = this.blockedOutput.poll();
         this.blockQueue.remove(polled);
+        polled.setState("Ready");
         this.readyQueue.add(polled);
         printQueue(blockQueue);
     }
@@ -66,6 +67,7 @@ public class Scheduler {
     public void removeFromInput() {
         Process polled = this.blockedInput.poll();
         this.blockQueue.remove(polled);
+        polled.setState("Ready");
         this.readyQueue.add(polled);
         printQueue(blockQueue);
 
@@ -74,6 +76,7 @@ public class Scheduler {
     public void removeFromFile() {
         Process polled = this.blockedFile.poll();
         this.blockQueue.remove(polled);
+        polled.setState("Ready");
         this.readyQueue.add(polled);
         printQueue(blockQueue);
 
@@ -134,20 +137,28 @@ public class Scheduler {
             }
 
 
-            for (int i = 0; i < timeSlice; i++) {
-                mem.printMemory();
+            for (int i = 0; i < timeSlice && !(currentProcess.getState().equals("Blocked")); i++) {
+                // mem.printMemory();
                 ArrayList<Process> processes = mem.loadData(i); 
                 
-                if(!processes.isEmpty()){
-                    for(Process pro : processes){
-                        if(pro.getTime() == this.time)
-                        readyQueue.add(pro);
-                        printQueue(blockQueue);
+                // if(!processes.isEmpty()){
+                //     for(Process pro : processes){
+                //         if(pro.getTime() == this.time){
+                //            // pro.setState("Running");
+                //             readyQueue.add(pro);
+                //         }
+                //         printQueue(blockQueue);
 
+                //     }
+                // }
+                    if(time == 2){
+                        System.out.println();
                     }
-                }
-
                 if (currentProcess.getProgramCounter() < currentProcess.getInstructions().size()) {
+                    System.out.println("\nTime Slice: " + time);
+                    if(time == 27){
+                        System.out.println();
+                    }
                     interpreter.interpret(this, mem, currentProcess);
 
                     time++;
@@ -155,9 +166,27 @@ public class Scheduler {
                     time++;
                     break;
                 }
+
+                if(!processes.isEmpty()){
+                    for(Process pro : processes){
+                        if(pro.getTime() == this.time){
+                           // pro.setState("Running");
+                            readyQueue.add(pro);
+                        }
+                        printQueue(blockQueue);
+
+                    }
+                }
+                mem.printMemory();
+                System.out.println("\n\n");
+                printQueues();
             }
             if (currentProcess.getProgramCounter() < currentProcess.getInstructions().size()) {
-                readyQueue.add(currentProcess);
+                if(!(currentProcess.getState().equals("Blocked"))){
+                    currentProcess.setState("Ready");
+                    mem.setProcessState(currentProcess.getId(), "Ready");
+                    readyQueue.add(currentProcess);
+                }
                 printQueue(blockQueue);
 
             } else {
@@ -207,87 +236,3 @@ public class Scheduler {
 
     
 }
-
-//
-// import java.util.LinkedList;
-// import java.util.Queue;
-//
-// public class Scheduler {
-// private Queue<Process> readyQueue;
-// private Queue<Process> blockedQueue;
-// private final int TIME_SLICE = 2; // Number of instructions each process gets
-// to execute per turn
-//
-// public Scheduler() {
-// this.readyQueue = new LinkedList<>();
-// this.blockedQueue = new LinkedList<>();
-// }
-//
-// // Adds a process to the ready queue
-// public void addProcess(Process process) {
-// readyQueue.add(process);
-// }
-//
-// // Adds a process to the blocked queue
-// public void blockProcess(Process process) {
-// blockedQueue.add(process);
-// }
-//
-// // Moves a process from the blocked queue to the ready queue
-// public void unblockProcess(Process process) {
-// blockedQueue.remove(process);
-// addProcess(process);
-// }
-//
-// public void schedule() {
-// while (!readyQueue.isEmpty()) {
-// // Get the next process in the queue (but don't remove it yet)
-// Process currentProcess = readyQueue.peek();
-//
-// // Execute the process's next instructions
-// for (int i = 0; i < TIME_SLICE; i++) {
-// if (currentProcess.getProcessState().equals("READY")) {
-// System.out.println("Executing instruction " +
-// (currentProcess.getProgramCounter() + 1)
-// + " of process " + currentProcess.getProcessId());
-//
-// // Here we are just incrementing the program counter. In a real
-// implementation, you would
-// // have the process actually perform the instruction here.
-// currentProcess.setProgramCounter(currentProcess.getProgramCounter() + 1);
-// }
-// // If the process is blocked, move it to the blocked queue
-// else if (currentProcess.getProcessState().equals("BLOCKED")) {
-// blockProcess(currentProcess);
-// break; // Exit the loop early
-// }
-// }
-//
-// // After the process has had its turn, remove it from the front of the queue
-// readyQueue.poll();
-//
-// // If the process is not finished and not blocked, add it back to the end of
-// the queue
-// if (!currentProcess.getProcessState().equals("FINISHED") &&
-// !currentProcess.getProcessState().equals("BLOCKED")) {
-// readyQueue.add(currentProcess);
-// }
-// }
-// }
-//
-// // Checks if there are any blocked processes that are ready to be unblocked
-// public void checkBlockedProcesses() {
-// Queue<Process> tempQueue = new LinkedList<>();
-// while (!blockedQueue.isEmpty()) {
-// Process process = blockedQueue.poll();
-// if (/* condition to check if the process can be unblocked */) {
-// unblockProcess(process);
-// } else {
-// tempQueue.add(process);
-// }
-// }
-// // Replace the original blocked queue with the temporary queue (which still
-// contains the processes that couldn't be unblocked)
-// blockedQueue = tempQueue;
-// }
-// }
