@@ -276,6 +276,20 @@ public class Memory implements Serializable{
         }
     }
     
+    public void printDiskContents() {
+        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("src/resources/Disk.bin"))) {
+            System.out.println("Disk Contents:");
+            while (true) {
+                Process process = (Process) inputStream.readObject();
+                System.out.println(process);
+            }
+        } catch (EOFException e) {
+            // Reached end of file
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Error reading disk contents: " + e.getMessage());
+        }
+    }
+    
 }
 
 // Nested class to represent Variable with its name and value.

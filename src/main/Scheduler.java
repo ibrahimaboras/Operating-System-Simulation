@@ -180,6 +180,7 @@ public class Scheduler {
                 mem.printMemory();
                 System.out.println("\n\n");
                 printQueues();
+                mem.printDiskContents();
             }
             if (currentProcess.getProgramCounter() < currentProcess.getInstructions().size()) {
                 if(!(currentProcess.getState().equals("Blocked"))){
